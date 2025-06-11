@@ -1,6 +1,7 @@
 package com.api.soporte_ticket.models;
 import jakarta.persistence.*;
 import lombok.*;
+import java.sql.Date;
 
 @Entity
 @Table(name = "soporte_ticket")
@@ -11,15 +12,17 @@ public class SoporteTicket {
      
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_soporte_ticket")
-    private Integer id;
-    private String titulo;
+    @Column(name="id_soporte")
+    private Integer idSoporte;
+
+    @ManyToOne
+    @JoinColumn(name = "id_usuario")
+    private Usuario usuario;
+
     private String descripcion;
-    private String estado;
-    private String prioridad;
-    private String fechaCreacion;
-    private String fechaActualizacion;
-    private String usuario;
-    
+    private String Tipo;
+    private String Estado;
+    private Date FechaCreacion;
+    private Date FechaResolucion;
 
 }

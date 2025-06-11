@@ -1,54 +1,85 @@
 package com.api.soporte_ticket.service;
 
+import com.api.soporte_ticket.models.SoporteTicket;
+import com.api.soporte_ticket.models.Usuario;
+import com.api.soporte_ticket.repository.SoporteTicketRepository;
+import com.api.soporte_ticket.repository.UsuarioRepository;
+import com.api.soporte_ticket.dto.SoporteTicketDTO;
+
+
 import java.util.List;
 
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.api.soporte_ticket.models.SoporteTicket;
-import com.api.soporte_ticket.repository.SoporteTicketRepository;
-
-import lombok.RequiredArgsConstructor;
-
+import java.util.stream.Collectors;
 @Service
-@RequiredArgsConstructor
 public class SoporteTicketService {
 
-    private final SoporteTicketRepository soporteTicketRepository;
 
-    
-    public List<SoporteTicket> listarTickets() {
-        return soporteTicketRepository.findAll();
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+    @Autowired
+    private SoporteTicketRepository soporteTicketRepository;
+
+    private SoporteTicketDTO toDTO(SoporteTicket soporteTicket) {
+        return new SoporteTicketDTO(
+            soporteTicket.getIdSoporte(),
+            soporteTicket.getUsuario().getIdUsuario(),
+            soporteTicket.getDescripcion(),
+            soporteTicket.getTipo(),
+            soporteTicket.getEstado(),
+            soporteTicket.getFechaCreacion(),
+            soporteTicket.getFechaResolucion()
+        );
     }
 
-    
-    public SoporteTicket crearTicket(SoporteTicket ticket) {
-        return soporteTicketRepository.save(ticket);
+    private SoporteTicket toEntity(SoporteTicketDTO dto) {
+        SoporteTicket soporteTicket = new SoporteTicket();
+        soporteTicket.setIdSoporte(dto.getIdSoporte());
+        soporteTicket.setFechaCreacion(dto.getFechaCreacion());
+        soporteTicket.setFechaResolucion(dto.getFechaResolucion());
+        soporteTicket.setDescripcion(dto.getDescripcion());
+        soporteTicket.setTipo(dto.getTipo());
+        soporteTicket.setEstado(dto.getEstado());
+        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        soporteTicket.setUsuario(usuario);
+        return soporteTicket;
     }
 
-   
-    public SoporteTicket buscarTicketPorId(Long id) {
-        return soporteTicketRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Ticket no encontrado con ID: " + id));
+    public SoporteTicketDTO crear(SoporteTicketDTO dto) {
+        SoporteTicket soporteTicket = toEntity(dto);
+        return toDTO(soporteTicketRepository.save(soporteTicket));
     }
 
-    
-    public SoporteTicket actualizarTicket(Long id, SoporteTicket ticketActualizado) {
-        SoporteTicket ticketExistente = soporteTicketRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Ticket no encontrado con ID: " + id));
-
-        ticketExistente.setTitulo(ticketActualizado.getTitulo());
-        ticketExistente.setDescripcion(ticketActualizado.getDescripcion());
-        ticketExistente.setEstado(ticketActualizado.getEstado());
-        ticketExistente.setPrioridad(ticketActualizado.getPrioridad());
-        ticketExistente.setFechaCreacion(ticketActualizado.getFechaCreacion());
-        ticketExistente.setFechaActualizacion(ticketActualizado.getFechaActualizacion());
-        ticketExistente.setUsuario(ticketActualizado.getUsuario());
-
-        return soporteTicketRepository.save(ticketExistente);
+    public List<SoporteTicketDTO> listar() {
+        return soporteTicketRepository.findAll().stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
     }
 
-    
-    public void eliminarTicket(Long id) {
-        soporteTicketRepository.deleteById(id);
+    public SoporteTicketDTO buscar(Integer id) {
+        SoporteTicket soporteTicket = soporteTicketRepository.findById(id.longValue())
+            .orElseThrow(() -> new RuntimeException("Soporte no encontrado"));
+        return toDTO(soporteTicket);
+    }
+
+    public SoporteTicketDTO actualizar(Integer id, SoporteTicketDTO dto) {
+        SoporteTicket existente = soporteTicketRepository.findById(id.longValue())
+            .orElseThrow(() -> new RuntimeException("Soporte no encontrado"));
+        existente.setFechaCreacion(dto.getFechaCreacion());
+        existente.setFechaResolucion(dto.getFechaResolucion());
+        existente.setDescripcion(dto.getDescripcion());
+        existente.setTipo(dto.getTipo());
+        existente.setEstado(dto.getEstado());
+        Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        existente.setUsuario(usuario);
+        return toDTO(soporteTicketRepository.save(existente));
+    }
+
+    public void eliminar(Integer id) {
+        soporteTicketRepository.deleteById(id.longValue());
     }
 }

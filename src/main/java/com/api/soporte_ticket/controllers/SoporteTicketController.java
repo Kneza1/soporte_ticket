@@ -1,60 +1,42 @@
 package com.api.soporte_ticket.controllers;
 
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.http.HttpStatus;
+import com.api.soporte_ticket.dto.SoporteTicketDTO;
+import com.api.soporte_ticket.service.SoporteTicketService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import com.api.soporte_ticket.models.SoporteTicket;
-import com.api.soporte_ticket.service.SoporteTicketService;
-
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/soporte-tickets")
-@RequiredArgsConstructor
+@RequestMapping("/api/soporte")
 public class SoporteTicketController {
 
-    private final SoporteTicketService soporteTicketService;
+    @Autowired
+    private SoporteTicketService soporteTicketServices;
 
-    
-    @GetMapping
-    public List<SoporteTicket> getAll() {
-        return soporteTicketService.listarTickets();
-    }
-
-    
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
-        try {
-            SoporteTicket ticket = soporteTicketService.buscarTicketPorId(id);
-            return ResponseEntity.ok(ticket);
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                 .body(Map.of("mensaje", ex.getMessage()));
-        }
-    }
-
-    
     @PostMapping
-    public ResponseEntity<SoporteTicket> crear(@RequestBody SoporteTicket nuevoTicket) {
-        SoporteTicket creado = soporteTicketService.crearTicket(nuevoTicket);
-        return ResponseEntity.status(HttpStatus.CREATED).body(creado);
+    public ResponseEntity<SoporteTicketDTO> crear(@RequestBody SoporteTicketDTO dto) {
+        return ResponseEntity.ok(soporteTicketServices.crear(dto));
     }
 
-    
+    @GetMapping
+    public ResponseEntity<List<SoporteTicketDTO>> listar() {
+        return ResponseEntity.ok(soporteTicketServices.listar());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SoporteTicketDTO> buscar(@PathVariable Integer id) {
+        return ResponseEntity.ok(soporteTicketServices.buscar(id));
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<SoporteTicket> actualizar(@PathVariable Long id, @RequestBody SoporteTicket ticketActualizado) {
-        SoporteTicket actualizado = soporteTicketService.actualizarTicket(id, ticketActualizado);
-        return ResponseEntity.ok(actualizado);
+    public ResponseEntity<SoporteTicketDTO> actualizar(@PathVariable Integer id, @RequestBody SoporteTicketDTO dto) {
+        return ResponseEntity.ok(soporteTicketServices.actualizar(id, dto));
     }
 
-    
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        soporteTicketService.eliminarTicket(id);
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        soporteTicketServices.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 }
